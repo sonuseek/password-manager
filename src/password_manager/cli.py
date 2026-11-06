@@ -2,7 +2,7 @@ import argparse
 import getpass
 from pathlib import Path
 
-from password_manager.core import PasswordManager, VaultExistsError
+from password_manager.core import PasswordManager, VaultExistsError, VaultLockedError
 from password_manager.generator import generate_password
 
 
@@ -44,6 +44,45 @@ def run_init(manager: PasswordManager) -> None:
     print("Vault initialized.")
 
 
+def run_menu(manager: PasswordManager) -> None:
+    master_password = getpass.getpass("Master password: ")
+    if not manager.unlock(master_password):
+        print("Wrong password.")
+        return
+
+    while True:
+        print("\n1) add  2) list  3) get  4) delete  5) exit")
+        choice = input("> ").strip()
+
+        if choice == "1":
+            name = input("Entry name: ").strip()
+            login = input("Login: ").strip()
+            password = getpass.getpass("Password: ")
+            manager.add_entry(name, login, password)
+            print("Added.")
+        elif choice == "2":
+            for name in manager.list_entries():
+                print(name)
+        elif choice == "3":
+            name = input("Entry name: ").strip()
+            try:
+                entry = manager.get_entry(name)
+                print(f"login: {entry['login']}, password: {entry['password']}")
+            except KeyError as exc:
+                print(f"Error: {exc}")
+        elif choice == "4":
+            name = input("Entry name: ").strip()
+            try:
+                manager.delete_entry(name)
+                print("Deleted.")
+            except KeyError as exc:
+                print(f"Error: {exc}")
+        elif choice == "5":
+            break
+        else:
+            print("Unknown option.")
+            
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -57,3 +96,12 @@ def main() -> None:
     if args.init:
         run_init(manager)
         return
+
+    if args.unlock:
+        try:
+            run_menu(manager)
+        except VaultLockedError as exc:
+            print(f"Error: {exc}")
+        return
+
+    parser.print_help()
