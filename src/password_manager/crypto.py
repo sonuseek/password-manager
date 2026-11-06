@@ -33,7 +33,7 @@ def encrypt(plaintext: str, key: bytes) -> str:
     plaintext_bytes = plaintext.encode("utf-8")
     token = fernet.encrypt(plaintext_bytes)
     return token.decode()
- 
+
 
 def decrypt(token: str, key: bytes) -> str:
     """Decryption password"""
