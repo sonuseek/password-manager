@@ -1,2 +1,3 @@
-def main() -> None:
-    print("Hello from password-manager!")
+from password_manager.cli import main
+
+__all__ = ["main"]
