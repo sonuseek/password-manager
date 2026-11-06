@@ -116,3 +116,11 @@ class PasswordManager:
         if name not in self.entries:
             raise KeyError(f"No entry named '{name}'")
         return self.entries[name]
+
+    def delete_entry(self, name: str) -> None:
+        if not self.is_unlocked:
+            raise VaultLockedError("Vault is locked")
+        if name not in self.entries:
+            raise KeyError(f"No entry named '{name}'")
+        del self.entries[name]
+        self._persist()
