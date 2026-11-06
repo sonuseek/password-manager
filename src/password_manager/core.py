@@ -54,4 +54,25 @@ class PasswordManager:
             }
         return True
 
+    def _persist(self) -> None:
+        if self.key is None:
+            raise VaultLockedError("Cannot persist while locked.")
+        if self.salt_master is None or self.salt_key is None or self.hash_master is None:
+            raise VaultLockedError("Cannot persist while locked.")
+
+        encrypted_entries = {}
+        for name, record in self.entries.items():
+            encrypted_entries[name] = {
+                "login": crypto.encrypt(record["login"], self.key),
+                "password": crypto.encrypt(record["password"], self.key),
+            }
+        payload = {
+            "salt_master": base64.b64encode(self.salt_master).decode("ascii"),
+            "salt_key": base64.b64encode(self.salt_key).decode("ascii"),
+            "hash_master": base64.b64encode(self.hash_master).decode("ascii"),
+            "entries": encrypted_entries,
+        }
+        with self.storage_path.open("w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2)
+
     
