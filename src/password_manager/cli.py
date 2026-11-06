@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from password_manager.generator import generate_password
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -23,3 +25,12 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Path to the vault file."
     )
     return parser
+
+
+def main() -> None:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    if args.generate:
+        print(generate_password(args.length))
+        return
