@@ -75,4 +75,17 @@ class PasswordManager:
         with self.storage_path.open("w", encoding="utf-8") as fh:
             json.dump(payload, fh, indent=2)
 
+    def init_master(self, new_password: str, *, current_password: str | None = None) -> None:
+        if self.is_initialized:
+            if current_password is None:
+                raise VaultExistsError("Vault already exists; pass current_password to confirm.")
+            if not crypto.verify_master_password(current_password, self.salt_master, self.hash_master):
+                raise VaultExistsError("current_password does not match the existing vault")
+            
+        self.salt_master = crypto.generate_salt()
+        self.salt_key = crypto.generate_salt()
+        self.hash_master = crypto.hash_master_password(new_password, self.salt_master)
+        self.key = crypto.derive_fernet_key(new_password, self.salt_key)
+        self.entries = {}
+        self._persist()
     
