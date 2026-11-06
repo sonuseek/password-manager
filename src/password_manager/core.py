@@ -85,7 +85,7 @@ class PasswordManager:
                 current_password, self.salt_master, self.hash_master
             ):
                 raise VaultExistsError("current_password does not match the existing vault")
-            
+              
         self.salt_master = crypto.generate_salt()
         self.salt_key = crypto.generate_salt()
         self.hash_master = crypto.hash_master_password(new_password, self.salt_master)
@@ -109,3 +109,10 @@ class PasswordManager:
         for name in self.entries:
             arr.append(name)
         return arr
+
+    def get_entry(self, name: str) -> dict[str, str]:
+        if not self.is_unlocked:
+            raise VaultLockedError("Vault is locked")
+        if name not in self.entries:
+            raise KeyError(f"No entry named '{name}'")
+        return self.entries[name]
