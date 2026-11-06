@@ -79,7 +79,11 @@ class PasswordManager:
         if self.is_initialized:
             if current_password is None:
                 raise VaultExistsError("Vault already exists; pass current_password to confirm.")
-            if not crypto.verify_master_password(current_password, self.salt_master, self.hash_master):
+            if self.salt_master is None or self.hash_master is None:
+                raise VaultLockedError("Cannot verify: vault state is missing.")
+            if not crypto.verify_master_password(
+                current_password, self.salt_master, self.hash_master
+            ):
                 raise VaultExistsError("current_password does not match the existing vault")
             
         self.salt_master = crypto.generate_salt()
@@ -88,4 +92,12 @@ class PasswordManager:
         self.key = crypto.derive_fernet_key(new_password, self.salt_key)
         self.entries = {}
         self._persist()
-    
+
+    def add_entry(self, name: str, login: str, password: str) -> None:
+        if self.salt_master is None or self.hash_master is None:
+            raise VaultLockedError("Vault is locked")
+        self.entries[name] = {
+                            "login": login, 
+                            "password": password
+                        }
+        self._persist()
