@@ -94,10 +94,18 @@ class PasswordManager:
         self._persist()
 
     def add_entry(self, name: str, login: str, password: str) -> None:
-        if self.salt_master is None or self.hash_master is None:
+        if not self.is_unlocked:
             raise VaultLockedError("Vault is locked")
         self.entries[name] = {
-                            "login": login, 
-                            "password": password
-                        }
+            "login": login,
+            "password": password,
+        }
         self._persist()
+
+    def list_entries(self) -> list[str]:
+        if not self.is_unlocked:
+            raise VaultLockedError("Vault is locked")
+        arr = []
+        for name in self.entries:
+            arr.append(name)
+        return arr
